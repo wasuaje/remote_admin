@@ -1,0 +1,8 @@
+*.bak
+*.pyc
+*.pyo
+.*.swp
+changelog
+control
+tmp
+files

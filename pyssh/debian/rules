@@ -1,0 +1,111 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+BUILDER=Mark W. Alexander <slash@dotnetslash.net>
+PYTHON=python
+PYNAME=$(shell echo $(PYTHON)| sed -e "s/[0-9].*$$//")
+PKG=pyssh
+DESCRIPTION=Python library for programmatically controlling ssh and scp
+DATE=$(shell date -R)
+PYDIR=$(shell $(PYTHON) -c "import sys;print sys.prefix")
+PYVER=$(shell $(PYTHON) -c "import sys;print sys.version" | \
+		head -1|cut -d\  -f1 | sed -e "s/\([0-9]\.[0-9]\).*/\1/")
+GVER=$(shell grep -i "version.*=" setup.py | sed -e 's/[^"]*"\([^"]*\)".*/\1/')
+
+control:
+	if test -z $(PKG) ; \
+		then \
+		echo "PKG must be set to the package name"; \
+		exit 1; \
+	fi 
+	if test -z $(PYTHON) ; \
+		then \
+		echo "PYTHON must be point to the python binary to package for"; \
+		exit 1; \
+	fi
+	if test -z "$(BUILDER)" ; \
+		then \
+		echo "BUILDER must be set to 'Your name <your@email>'"; \
+		exit 1; \
+	fi
+	if test -z "$(DESCRIPTION)" ; \
+		then \
+		echo "DESCRIPTION must provide a brief package description"; \
+		exit 1; \
+	fi
+	if test ! -r setup.py ; \
+		then \
+		echo "These rules require a setup.py"; \
+		exit 1; \
+	fi
+	#if test ! -r setup.cfg ; \
+		#then \
+		#echo "These rules require a setup.cfg"; \
+		#exit 1; \
+	#fi
+
+configure: control
+	sed -e "s/__PYVER__/$(PYVER)/g" \
+	    -e "s/__PYTHON__/$(PYNAME)/g" \
+	    -e "s/__DESCRIPTION__/$(DESCRIPTION)/g" \
+	    -e "s/__PKG__/$(PKG)/g" \
+	    -e "s/__DATE__/$(DATE)/g" \
+	    -e "s/__BUILDER__/$(BUILDER)/g" \
+	    -e "s/__GVER__/$(GVER)/g" \
+		debian/control.in >debian/control
+	sed -e "s/__PYVER__/$(PYVER)/g" \
+	    -e "s/__PYTHON__/$(PYNAME)/g" \
+	    -e "s/__PKG__/$(PKG)/g" \
+	    -e "s/__DATE__/$(DATE)/g" \
+	    -e "s/__BUILDER__/$(BUILDER)/g" \
+	    -e "s/__DESCRIPTION__/$(DESCRIPTION)/g" \
+	    -e "s/__GVER__/$(GVER)/g" \
+		debian/changelog.in >debian/changelog
+
+build-stamp: configure
+	dh_testdir
+	$(PYTHON) setup.py build
+	touch build-stamp
+
+build: build-stamp
+
+clean:
+	dh_testdir
+	rm build-stamp
+	rm -rf build/bdist.linux-i686 build/lib build/scripts-$(PYVER)
+	dh_clean
+	$(shell test -d debian/tmp && rm -rf debian/tmp)
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	umask 022
+	mkdir -p debian/tmp/$(PYDIR)/lib/python$(PYVER)/site-packages
+	cp -r build/lib/$(PKG) \
+		debian/tmp/$(PYDIR)/lib/python$(PYVER)/site-packages
+	#mkdir -p debian/tmp/$(PYDIR)/bin
+	#mkdir -p debian/tmp/scripts-$(PYVER)
+	#cp -r build/scripts-$(PYVER)/* debian/tmp/$(PYDIR)/bin
+	$(PYTHON) $(PYDIR)/lib/python$(PYVER)/compileall.py \
+		-d $(PYDIR)/lib/python$(PYVER)/site-packages/$(PKG) \
+		debian/tmp$(PYDIR)/lib/python$(PYVER)/site-packages/$(PKG)
+
+# Build architecture-independent files here.
+binary-indep: build install
+	# nothing to do
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol 
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

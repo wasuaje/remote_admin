@@ -1,0 +1,9 @@
+__PYTHON____PYVER__-__PKG__ (__GVER__) unstable; urgency=low
+
+  * Initial debian package
+
+ -- __BUILDER__  __DATE__
+
+Local variables:
+mode: debian-changelog
+End:

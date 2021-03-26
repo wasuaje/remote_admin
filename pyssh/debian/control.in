@@ -1,0 +1,12 @@
+Source: __PYTHON____PYVER__-__PKG__
+Section: interpretors
+Priority: optional
+Maintainer: __BUILDER__
+Build-Depends: __PYTHON____PYVER__
+
+Package: __PYTHON____PYVER__-__PKG__
+Architecture: any
+Depends: __PYTHON____PYVER__
+Conflicts: 
+Description: __DESCRIPTION__
+

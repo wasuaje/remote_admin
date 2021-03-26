@@ -1,0 +1,38 @@
+Building Debian packages
+=================================================
+Distutils does not support building Debian packages. This 
+directory contains debian packaging files that support
+building binary packages compatible with Debian Python
+releases.
+
+PySSH .deb files must be built for the specific version(s)
+of python installed. To do so, change the PYTHON= line in 
+debian/rules:
+
+PYTHON=[python interpretor]
+
+to use the versioned python interpretor supplied by the Debian
+Python package then, either as root or using fakeroot run:
+
+debian/rules binary
+
+The package will then be created named:
+
+python[python_version-pyssh_[pyssh_version]_[arch].deb
+
+Note that PYTHON=python
+
+will build a .deb for whichever version of Python is your
+default.
+
+EXAMPLE
+If you want a pyssh .deb for Python 2.3, change the PYTHON= 
+line to:
+
+PYTHON=python2.3
+
+Then run:
+
+fakeroot debian/rules binary
+
+For PySSH 0.3, this will produce the file "python2.3-pyssh_0.3_i386.deb"
